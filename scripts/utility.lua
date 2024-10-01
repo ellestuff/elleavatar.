@@ -54,9 +54,9 @@ function utilityModule.getStrongholdRing(dist)
 	for i, v in ipairs(strongholdRings) do
 		local mn = i * 3072 - 1792
 		local mx = i * 3072 - 256
-		if (mn <= dist and dist <= mx) then return i, mn, mx end
+		if (mn <= dist and dist <= mx) then return i, mn, mx, strongholdRings[i] end
 	end
-	return 0, 0, 0
+	return 0, 0, 0, 0
 end
 
 function utilityModule.formatMillibuckets(amount)
@@ -66,6 +66,8 @@ function utilityModule.formatMillibuckets(amount)
 end
 
 function utilityModule.formatTime(ticks)
+	if (ticks == nil) then return "??:??" end
+	
 	local rawSecs = math.floor((ticks+10)/20)
 	local secs = rawSecs%60
 	local mins = math.floor(rawSecs/60)%60
@@ -79,19 +81,12 @@ function utilityModule.formatTime(ticks)
 	return str
 end
 
-function utilityModule.newNineSlice(name,parent,texture,left,right,top,bottom)
-	local slice = models:newPart(name)
-		:moveTo(parent)
-		
-		-- Top
-		:newSprite("top")
-			:setTexture(texture)
-	
-	return slice
-end
-
-function utilityModule.scaleNineSlice(slice,w,h)
-	
+-- Create block of colour
+function utilityModule.createBlock(name,c,a,parent)
+	return parent:newSprite(name)
+		:setTexture(textures["pixel"],1,1)
+		:setRenderType("CUTOUT_EMISSIVE_SOLID")
+		:setColor(c.x,c.y,c.z,a)
 end
 
 return utilityModule

@@ -24,6 +24,8 @@ end
 
 -- Different Displays for BlockEntity Data
 function blockModule.getText(block, rawData)
+	if (not(host:isHost())) then return "" end
+	
 	local id = block.id
 	local nbt = block:getEntityData()
 	local properties = block:getProperties()
@@ -70,7 +72,7 @@ function blockModule.getText(block, rawData)
 	if (id == "sophisticatedstorage:controller") then 
 		local positions = ""
 		for i,pos in ipairs(nbt.storagePositions) do
-			local x, y, z = decodeSophStorageCoords(pos)
+			local x, y, z = utility.decodeSophStorageCoords(pos)
 			positions = positions..(x..", "..y..", "..z.."   :   "..pos).."\n"
 		end
 		return printTable(positions,6,true)
@@ -108,12 +110,15 @@ function blockModule.getText(block, rawData)
 	
 	-- Sophisticated Storage/Backpacks
 	if (isSophisticated) then
+		if (nbt.storageWrapper.renderInfo == nil) then return "" end
+		
 		-- Upgrades
-		local upgrades = "\nUpgrades:\n"
+		local upgrades = "\n\nUpgrades:\n"
 		local upgradeCount = 0
+		
 		for i, v in ipairs(nbt.storageWrapper.renderInfo.upgradeItems) do
 			if (v.id ~= "minecraft:air") then
-				local upgr = utility.formatString(splitString(v.id, ":")[2])
+				local upgr = utility.formatString(utility.splitString(v.id, ":")[2])
 				upgrades = upgrades.."	"..upgr.."\n"
 				upgradeCount = upgradeCount + 1
 			end
@@ -121,7 +126,17 @@ function blockModule.getText(block, rawData)
 		
 		if (upgradeCount == 0) then upgrades = "\nNo Upgrades" end
 		
-		return "Slot Count: "..nbt.storageWrapper.numberOfInventorySlots..upgrades
+		-- Other stuff
+		local locked = ""
+		if (nbt.locked == 1) then locked = "\n\n§l[Locked]" end
+		
+		local controller = ""
+		if (nbt.controllerPos ~= nil) then
+			local x,y,z = utility.decodeSophStorageCoords(nbt.controllerPos)
+			controller = "\nController Location:\n	"..x..", "..y..", "..z
+		end
+		
+		return "Slot Count: "..nbt.storageWrapper.numberOfInventorySlots..upgrades..controller..locked
 	end
 	
 	-- Sign Data
@@ -148,6 +163,7 @@ function blockModule.getText(block, rawData)
 		local front = "Front Side:\n"
 		for i, txt in ipairs(nbt.front_text.messages) do
 			local text = string.sub(txt, 10, #txt-2)
+			if (txt[1] ~= "{") then text = string.sub(txt, 2, #txt-1) end
 			front = front.."	"..colours[nbt.front_text.color]..text.."§r\n"
 		end
 		front = front.."Colour: "..colours[nbt.front_text.color]..utility.formatString(nbt.front_text.color).."§r\n"
@@ -156,15 +172,18 @@ function blockModule.getText(block, rawData)
 		local back = "Back Side:\n"
 		for i, txt in ipairs(nbt.back_text.messages) do
 			local text = string.sub(txt, 10, #txt-2)
+			if (txt[1] ~= "{") then text = string.sub(txt, 2, #txt-1) end
 			back = back.."	"..colours[nbt.back_text.color]..text.."§r\n"
 		end
 		back = back.."Colour: "..colours[nbt.back_text.color]..utility.formatString(nbt.back_text.color).."\n"
 		if (nbt.back_text.has_glowing_text == 1) then back = back .. "§e(Glowing)" end
 		
-		local compare = '{"text":""}{"text":""}{"text":""}{"text":""}'
+		local compare1 = nbt.front_text.messages[1]..nbt.front_text.messages[2]..nbt.front_text.messages[3]..nbt.front_text.messages[4]
+		local compare2 = nbt.back_text.messages[1]..nbt.back_text.messages[2]..nbt.back_text.messages[3]..nbt.back_text.messages[4]
+		local compare3 = '{"text":""}{"text":""}{"text":""}{"text":""}'
 		local str = ""
-		if (nbt.front_text.messages[1]..nbt.front_text.messages[2]..nbt.front_text.messages[3]..nbt.front_text.messages[4] ~= compare) then str = front.."\n" end
-		if (nbt.back_text.messages[1]..nbt.back_text.messages[2]..nbt.back_text.messages[3]..nbt.back_text.messages[4] ~= compare) then str = str..back end
+		if (compare1 ~= compare3 and compare1 ~= "\"\"\"\"\"\"\"\"") then str = front.."\n" end
+		if (compare2 ~= compare3 and compare2 ~= "\"\"\"\"\"\"\"\"") then str = str..back end
 		
 		return str
 	end

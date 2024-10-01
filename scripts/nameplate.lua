@@ -7,8 +7,8 @@ function colourToHex(c, small)
 	return str
 end
 
-local c1 = colourToHex(colours[1], false)
-local c2 = colourToHex(colours[2], false)
+local c1 = colourToHex(palette.colours[1], false)
+local c2 = colourToHex(palette.colours[2], false)
 
 -- Default
 nameplate.ALL:setText(
@@ -28,4 +28,4 @@ nameplate.CHAT:setText(
 )
 
 -- Logo Colour
-avatar:setColor(colours[2]/255)
+avatar:setColor(palette.colours[2]/255)
